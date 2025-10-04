@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Segoe+UI:400,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0b0b0b;
+            color: #eee;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 24px;
+            background: #161616;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px #0005;
+        }
+        h2 {
+            margin-bottom: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 2rem;
+            color: #fff;
+        }
+        .dashboard {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+        .card {
+            flex: 1 1 350px;
+            padding: 24px;
+            background: #1c1c1c;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px #0003;
+            min-width: 320px;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #ffd700;
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+        }
+        form label {
+            font-size: 0.98rem;
+            color: #bbb;
+            margin-bottom: 4px;
+            display: block;
+            margin-top: 10px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 6px;
+            border: none;
+            background: #222;
+            color: #eee;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: background 0.2s;
+        }
+        input:focus, select:focus {
+            background: #292929;
+        }
+        button {
+            background: linear-gradient(90deg,#ffd700,#ff9800);
+            color: #222;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background 0.2s;
+            border: none;
+        }
+        button:hover {
+            background: linear-gradient(90deg,#ff9800,#ffd700);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            background: #181818;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+        }
+        th {
+            background: #222;
+            color: #ffd700;
+            font-weight: 600;
+            border-bottom: 2px solid #333;
+        }
+        tr:nth-child(even) td {
+            background: #202020;
+        }
+        tr td {
+            border-bottom: 1px solid #222;
+        }
+        .links {
+            margin-top: 24px;
+            text-align: center;
+        }
+        .links a {
+            color: #ffd700;
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .links a:hover {
+            color: #ff9800;
+            text-decoration: underline;
+        }
+        @media (max-width: 900px) {
+            .dashboard {
+                flex-direction: column;
+                gap: 24px;
+            }
+            .container {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Dashboard</h2>
+        <div class="dashboard">
+            <div class="card">
+                <h3>Create User</h3>
+                <form action="/admin/create-user" method="post">
+                    <label for="name">Full name</label>
+                    <input id="name" name="name" placeholder="Full name" required>
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" placeholder="email" required>
+                    <label for="role">Role</label>
+                    <select id="role" name="role">
+                        <option>Employee</option>
+                        <option>Manager</option>
+                    </select>
+                    <button type="submit">Create &amp; Send Password</button>
+                </form>
+                <div style="margin-top:18px;">
+                    <h4 style="color:#ffd700;margin-bottom:8px;">Users</h4>
+                    <table>
+                        <tr><th>Name</th><th>Email</th><th>Role</th></tr>
+                        {% for u in users %}
+                            <tr><td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.role }}</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Approval Rule / Sequence</h3>
+                <form action="/admin/set-approval-rule" method="post">
+                    <label for="seq_emails">Sequence (comma-separated emails, order)</label>
+                    <input id="seq_emails" name="seq_emails" placeholder="manager@...,finance@...,director@..." value="{{ rule.sequence|join(',') if rule }}"/>
+
+                    <label for="rule_type">Rule type</label>
+                    <select id="rule_type" name="rule_type">
+                        <option value="all" {% if rule and rule.rule_type=='all' %}selected{% endif %}>All approvers required</option>
+                        <option value="percentage" {% if rule and rule.rule_type=='percentage' %}selected{% endif %}>Percentage threshold</option>
+                        <option value="specific" {% if rule and rule.rule_type=='specific' %}selected{% endif %}>Specific approver</option>
+                        <option value="hybrid" {% if rule and rule.rule_type=='hybrid' %}selected{% endif %}>Hybrid</option>
+                    </select>
+
+                    <label for="percentage_threshold">Percentage threshold (for percentage/hybrid)</label>
+                    <input id="percentage_threshold" name="percentage_threshold" type="number" min="1" max="100" value="{{ rule.percentage_threshold if rule }}"/>
+
+                    <label for="specific_approver">Specific approver (email)</label>
+                    <input id="specific_approver" name="specific_approver" value="{{ rule.specific_approver if rule }}"/>
+
+                    <button type="submit">Save Rule</button>
+                </form>
+            </div>
+        </div>
+        <div class="links">
+            <a href="/logout">Logout</a> | <a href="/ui">Employee view</a> | <a href="/manager">Manager view</a>
+        </div>
+    </div>
+</body>
+</html>

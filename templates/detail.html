@@ -1,0 +1,95 @@
+<!-- templates/detail.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Expense Details</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --card: #111;
+      --muted: #bfbfbf;
+      --accent: #4cafef;
+    }
+    body { margin:0; min-height:100vh; background:var(--bg); color:#eee; font-family: "Segoe UI", Roboto, Arial, sans-serif; padding:22px; }
+    .card { background:var(--card); padding:18px; border-radius:14px; max-width:900px; margin: 0 auto; border:2px solid #171717; }
+    h1 { margin:0 0 10px 0; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .field { margin-bottom:8px; color:#ddd; }
+    .muted { color:var(--muted); font-size:13px; }
+    .receipt { margin-top:8px; border-radius:8px; overflow:hidden; background:#0c0c0c; padding:8px; }
+    img.receipt-img { max-width:100%; height:auto; display:block; border-radius:6px; }
+    .timeline { margin-top:12px; border-top:1px solid #222; padding-top:12px; }
+    .timeline-item { padding:8px; background:#0f0f0f; border-radius:6px; margin-bottom:8px; }
+    .actions { margin-top:14px; display:flex; gap:10px; justify-content:flex-end; }
+    .btn { background:transparent; border:1px solid #333; padding:8px 12px; border-radius:10px; color:#fff; cursor:pointer; }
+    .btn.primary { background:linear-gradient(90deg,var(--accent),#2f8fe3); border:none; }
+    a { color:var(--accent); text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Expense Details</h1>
+
+    <div class="grid">
+      <div>
+        <div class="field"><span class="muted">Description:</span><br>{{ expense.description }}</div>
+        <div class="field"><span class="muted">Category:</span><br>{{ expense.category }}</div>
+        <div class="field"><span class="muted">Paid by:</span><br>{{ expense.paid_by }}</div>
+        <div class="field"><span class="muted">Employee ID:</span><br>{{ expense.employee_id }}</div>
+      </div>
+      <div>
+        <div class="field"><span class="muted">Amount:</span><br>{{ "%.2f"|format(expense.amount) }} {{ expense.currency }}</div>
+        <div class="field"><span class="muted">Converted:</span><br>{{ expense.converted_amount }} INR</div>
+        <div class="field"><span class="muted">Status:</span><br>{{ expense.status }}</div>
+        <div class="field"><span class="muted">Date:</span><br>{{ expense.date }}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;">
+      <div class="muted">Remarks:</div>
+      <div style="margin-top:6px;">{{ expense.remarks or "-" }}</div>
+    </div>
+
+    {% if expense.receipt_url %}
+    <div style="margin-top:12px;">
+      <div class="muted">Receipt</div>
+      <div class="receipt">
+        {% if expense.receipt_url.endswith('.pdf') %}
+          <a href="{{ expense.receipt_url }}" target="_blank">Open PDF receipt</a>
+        {% else %}
+          <img class="receipt-img" src="{{ expense.receipt_url }}" alt="Receipt">
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="timeline">
+      <div class="muted">Approval Timeline</div>
+      {% if approvals and approvals|length > 0 %}
+        {% for a in approvals %}
+          <div class="timeline-item">
+            <strong>{{ a.approver }}</strong> → {{ a.status }}
+            {% if a.comment %} <div style="margin-top:6px; color:#cfcfcf">({{ a.comment }})</div> {% endif %}
+            <div style="margin-top:6px; color:var(--muted); font-size:12px;">{{ a.acted_at or "" }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="timeline-item">No approvals yet.</div>
+      {% endif %}
+    </div>
+
+    <div class="actions">
+      <a href="/ui" class="btn">← Back</a>
+
+      {% if expense.status == 'Draft' %}
+        <!-- Button to submit this draft (converts to Pending + creates approval) -->
+        <form method="post" action="/ui/submit-draft/{{ expense.id }}" style="display:inline;">
+          <button type="submit" class="btn primary">Submit</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
